@@ -1,9 +1,7 @@
 {
-  "id": "at-people",
-  "name": "At People",
-  "version": "1.0.2",
-  "description": "Use the @ to create links to people files.",
-  "author": "saibotsivad",
-  "authorUrl": "https://davistobias.com",
+  "id": "mention-things",
+  "name": "Mention Things",
+  "version": "1.0.0",
+  "description": "Define a list of prefixes to trigger an autocomplete suggestion to insert a link.",
   "isDesktopOnly": false
 }

@@ -1,25 +1,32 @@
 {
-  "name": "obsidian-at-people",
-  "version": "1.0.2",
-  "description": "Use the @ to create links to people files.",
-  "main": "main.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/saibotsivad/obsidian-at-people.git"
-  },
-  "keywords": [
-    "obsidian",
-    "obsidian-plugin",
-    "people"
-  ],
-  "author": {
-    "name": "Tobias Davis",
-    "email": "tobias@davistobias.com",
-    "url": "https://davistobias.com"
-  },
-  "license": "See license in LICENSE.md",
-  "bugs": {
-    "url": "https://github.com/saibotsivad/obsidian-at-people/issues"
-  },
-  "homepage": "https://github.com/saibotsivad/obsidian-at-people#readme"
+	"name": "obsidian-mention-things",
+	"version": "1.0.0",
+	"description": "Define a list of prefixes to trigger an autocomplete suggestion to insert a link.",
+	"main": "main.js",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/stracker-phil/obsidian-mention-things.git"
+	},
+	"keywords": [
+		"obsidian",
+		"obsidian-plugin",
+		"people"
+	],
+	"author": {
+		"name": "Philipp Stracker",
+		"email": "info@philippstracker.com",
+		"url": "https://philippstracker.com"
+	},
+	"contributors": [
+		{
+			"name": "Tobias Davis",
+			"email": "tobias@davistobias.com",
+			"url": "https://davistobias.com"
+		}
+	],
+	"license": "See license in LICENSE.md",
+	"bugs": {
+		"url": "https://github.com/stracker-phil/obsidian-mention-things/issues"
+	},
+	"homepage": "https://github.com/stracker-phil/obsidian-mention-things#readme"
 }
