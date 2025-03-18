@@ -1,0 +1,52 @@
+import { App, TFile } from 'obsidian';
+
+/**
+ * Plugin settings interface
+ */
+export interface MentionSettings {
+	mentionTypes: MentionType[];
+	matchStart: boolean;
+}
+
+/**
+ * Represents a type of mention with its sign and label
+ */
+export interface MentionType {
+	sign?: string;
+	label?: string;
+}
+
+/**
+ * Represents a link to a mentioned item
+ */
+export interface MentionLink {
+	sign: string;
+	name: string;
+	path: string;
+}
+
+/**
+ * Structure for storing mentionable files
+ */
+export interface FileMaps {
+	[sign: string]: {
+		[key: string]: MentionLink;
+	};
+}
+
+/**
+ * Available signs for dropdown selection
+ */
+export interface AvailableSigns {
+	[sign: string]: string;
+}
+
+/**
+ * Suggestion item structure
+ */
+export interface MentionSuggestion {
+	suggestionType: 'set' | 'create';
+	displayText: string;
+	linkName: string;
+	context: any;
+}
