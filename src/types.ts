@@ -1,11 +1,13 @@
-import { App, TFile } from 'obsidian';
+import { EditorPosition, Editor } from 'obsidian';
 
 /**
  * Plugin settings interface
  */
 export interface MentionSettings {
 	mentionTypes: MentionType[];
-	matchStart: boolean;
+	matchStart?: boolean;
+	maxMatchLength?: number;
+	stopCharacters?: string;
 }
 
 /**
@@ -49,4 +51,23 @@ export interface MentionSuggestion {
 	displayText: string;
 	linkName: string;
 	context: any;
+}
+
+/**
+ * Type definition for EditorSuggest trigger info
+ */
+export interface EditorSuggestTriggerInfo {
+	start: EditorPosition;
+	end: EditorPosition;
+	query: string;
+}
+
+/**
+ * Type definition for EditorSuggest context
+ */
+export interface EditorSuggestContext {
+	start: EditorPosition;
+	end: EditorPosition;
+	query: string;
+	editor: Editor;
 }
