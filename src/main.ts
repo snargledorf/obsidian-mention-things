@@ -1,5 +1,5 @@
 import { Plugin } from 'obsidian';
-import { MentionSettings, FileMaps } from './types';
+import { MentionSettings } from './types';
 import { DEFAULT_SETTINGS } from './constants';
 import { MentionManager } from './mention/mention-manager';
 import { SuggestionProvider } from './editor/suggestion';
