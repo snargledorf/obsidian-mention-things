@@ -1,83 +1,40 @@
-name: Release Obsidian Plugin
+name: Release Obsidian plugin
+
 on:
     push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+        tags:
+            # Trigger when a new tag is pushed
+            - "*"
 
 jobs:
     build:
         runs-on: ubuntu-latest
+
         steps:
-            - name: Checkout git repo
-              uses: actions/checkout@v2
-              with:
-                  fetch-depth: 0 # otherwise, it fails to push refs to dest repo
+            -   uses: actions/checkout@v3
 
-            - name: Setup node.js
-              uses: actions/setup-node@v1
-              with:
-                  node-version: '23.x'
+            -   name: Use Node.js
+                uses: actions/setup-node@v3
+                with:
+                    node-version: "23.x"
 
-            - name: Get latest tag
-              id: get_latest_tag
-              uses: actions-ecosystem/action-get-latest-tag@v1
-              with:
-                  semver_only: true
+            -   name: Build plugin
+                run: |
+                    npm install
+                    npm run build
 
-            - name: Build plugin and create dist-folder
-              id: build
-              run: |
-                  npm install
-                  npm run build --if-present
+            -   name: Create zip archive
+                run: |
+                    cd dist
+                    zip -r ../mention-things.zip .
 
-            - name: Create zip archive
-              run: |
-                  cd dist
-                  zip -r ../${{ github.event.repository.name }}.zip .
-
-            - name: Create release
-              id: create_release
-              uses: actions/create-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  tag_name: ${{ steps.get_latest_tag.outputs.tag }}
-                  release_name: Release ${{ steps.get_latest_tag.outputs.tag }}
-                  draft: false
-                  prerelease: false
-
-            - name: Upload zip archive to release
-              id: upload-zip
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./${{ github.event.repository.name }}.zip
-                  asset_name: ${{ github.event.repository.name }}-${{ steps.get_latest_tag.outputs.tag }}.zip
-                  asset_content_type: application/zip
-
-            - name: Upload release file - main.js
-              id: upload-main
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./dist/main.js
-                  asset_name: main.js
-                  asset_content_type: text/javascript
-
-            - name: Upload release file - manifest.json
-              id: upload-manifest
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./dist/manifest.json
-                  asset_name: manifest.json
-                  asset_content_type: application/json
+            -   name: Create release
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                run: |
+                    tag="${GITHUB_REF#refs/tags/}"
+                    
+                    gh release create "$tag" \
+                      --title="$tag" \
+                      --draft \
+                      mention-things.zip dist/main.js dist/manifest.json
