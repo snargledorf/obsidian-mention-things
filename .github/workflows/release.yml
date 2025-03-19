@@ -1,0 +1,83 @@
+name: Release Obsidian Plugin
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout git repo
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0 # otherwise, it fails to push refs to dest repo
+
+            - name: Setup node.js
+              uses: actions/setup-node@v1
+              with:
+                  node-version: '23.x'
+
+            - name: Get plugin version from tag
+              id: version
+              run: |
+                  echo "::set-output name=tag::$(git describe --abbrev=0)"
+
+            - name: Build plugin and create dist-folder
+              id: build
+              run: |
+                  npm install
+                  npm run build --if-present
+
+            - name: Create zip archive
+              run: |
+                  cd dist
+                  zip -r ${{ github.event.repository.name }}.zip .
+
+            - name: Create release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  VERSION: ${{ github.ref }}
+              with:
+                  tag_name: ${{ github.ref }}
+                  release_name: ${{ github.ref }}
+                  draft: false
+                  prerelease: false
+
+            - name: Upload zip archive to release
+              id: upload-zip
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./${{ github.event.repository.name }}.zip
+                  asset_name: ${{ github.event.repository.name }}-${{ steps.version.outputs.tag }}.zip
+                  asset_content_type: application/zip
+
+            - name: Upload release file - main.js
+              id: upload-main
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./dist/main.js
+                  asset_name: main.js
+                  asset_content_type: text/javascript
+
+            - name: Upload release file - manifest.json
+              id: upload-manifest
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./dist/manifest.json
+                  asset_name: manifest.json
+                  asset_content_type: application/json
