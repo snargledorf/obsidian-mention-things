@@ -46,7 +46,7 @@ export class SettingsTab extends PluginSettingTab {
 		// Add button for new type
 		new Setting(containerEl)
 			.addButton(cb => {
-				cb.setButtonText('New Type')
+				cb.setButtonText('New type')
 					.setCta()
 					.onClick(async () => {
 						this.plugin.settings.mentionTypes.push({});
@@ -78,7 +78,7 @@ export class SettingsTab extends PluginSettingTab {
 		// Label text field
 		setting.addText(
 			text => text
-				.setPlaceholder('Label. Example "Person"')
+				.setPlaceholder('Type label, for example "Person"')
 				.setValue(value?.label || '')
 				.onChange(async (value) => {
 					this.plugin.settings.mentionTypes[index].label = value;
@@ -106,7 +106,7 @@ export class SettingsTab extends PluginSettingTab {
 	 * Render general settings section
 	 */
 	private renderGeneralSettings(containerEl: HTMLElement): void {
-		new Setting(containerEl).setName('General Settings').setHeading();
+		new Setting(containerEl).setName('General settings').setHeading();
 
 		// Match from start setting
 		new Setting(containerEl)
