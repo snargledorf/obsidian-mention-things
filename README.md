@@ -1,4 +1,4 @@
-# Obsidian - Mention Things
+# Mention Things
 
 Obsidian plugin that adds support to mention other notes via customizable signs. Most commonly used to `@`-mention people:
 
