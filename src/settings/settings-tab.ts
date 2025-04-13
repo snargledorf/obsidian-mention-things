@@ -25,7 +25,7 @@ export class SettingsTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        containerEl.createEl('h2', { text: 'Mention Things' });
+		new Setting(containerEl).setName('Mention Things').setHeading();
 
         // Render mention types section
         this.renderMentionTypesSection(containerEl, usedSigns);
@@ -38,7 +38,7 @@ export class SettingsTab extends PluginSettingTab {
      * Render the mention types section of the settings
      */
     private renderMentionTypesSection(containerEl: HTMLElement, usedSigns: string[]): void {
-        containerEl.createEl('h3', { text: 'Mention Types' });
+		new Setting(containerEl).setName('Mention Types').setHeading();
 
         // Render each mention type
         this.plugin.settings.mentionTypes.forEach((value, index) => {
@@ -108,7 +108,7 @@ export class SettingsTab extends PluginSettingTab {
      * Render general settings section
      */
     private renderGeneralSettings(containerEl: HTMLElement): void {
-        containerEl.createEl('h3', { text: 'General Settings' });
+		new Setting(containerEl).setName('General Settings').setHeading();
 
         // Match from start setting
         new Setting(containerEl)
