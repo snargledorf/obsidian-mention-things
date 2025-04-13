@@ -6,6 +6,5 @@
 	"description": "Define a list of prefixes to trigger an autocomplete suggestion to insert a link.",
 	"author": "Philipp Stracker",
 	"authorUrl": "https://philippstracker.com",
-	"fundingUrl": "https://philippstracker.com/tf",
 	"isDesktopOnly": false
 }
