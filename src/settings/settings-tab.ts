@@ -38,8 +38,6 @@ export class SettingsTab extends PluginSettingTab {
 	 * Render the mention types section of the settings
 	 */
 	private renderMentionTypesSection(containerEl: HTMLElement, usedSigns: string[]): void {
-		new Setting(containerEl).setName('Mention Types').setHeading();
-
 		// Render each mention type
 		this.plugin.settings.mentionTypes.forEach((value, index) => {
 			this.renderMentionTypeRow(containerEl, value, index, usedSigns);
