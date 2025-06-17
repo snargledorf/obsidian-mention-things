@@ -71,7 +71,7 @@ export function getLinkFromAlias(alias: string, file: TFile, settings: MentionSe
 export function createMentionLink(mentionLink: MentionLink): string {
 	let linkText = mentionLink.type.sign + mentionLink.name;
 	if (mentionLink.fileName !== linkText) {
-		linkText = `${linkText}|${linkText}`;
+		linkText = `${mentionLink.fileName}|${linkText}`;
 	}
 
 	return `[[${linkText}]]`;

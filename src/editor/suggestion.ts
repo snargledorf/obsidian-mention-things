@@ -156,7 +156,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 				
 				let displayText = mentionLink.name.trim();
 				
-				if (mentionLink.fileName !== mentionLink.name) {
+				if (mentionLink.fileName.substring(1) !== displayText) {
 					displayText += ` (${mentionLink.fileName})`;
 				}
 
