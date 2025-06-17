@@ -22,8 +22,9 @@ export function getLinkFromPath(path: string, settings: MentionSettings): Mentio
 
 		if (result?.[2]) {
 			return {
-				type: settings.mentionTypes[sign],
+				mentionType: settings.mentionTypes[sign],
 				name: result[2],
+				type: 'filename',
 				fileName: result[1],
 				path,
 			};
@@ -51,8 +52,9 @@ export function getLinkFromAlias(alias: string, file: TFile, settings: MentionSe
 
 		if (aliasRegexResult?.[1] && fileNameRegexResult?.[1]) {
 			return {
-				type: settings.mentionTypes[sign],
+				mentionType: settings.mentionTypes[sign],
 				name: aliasRegexResult[1],
+				type: 'alias',
 				fileName: fileNameRegexResult[1],
 				path: file.path,
 			};
@@ -69,9 +71,9 @@ export function getLinkFromAlias(alias: string, file: TFile, settings: MentionSe
  * @returns Formatted link string
  */
 export function createMentionLink(mentionLink: MentionLink): string {
-	let linkText = mentionLink.type.sign + mentionLink.name;
-	if (mentionLink.fileName !== linkText) {
-		linkText = `${mentionLink.fileName}|${linkText}`;
+	let linkText = mentionLink.fileName;
+	if (mentionLink.type === 'alias') {
+		linkText = `${linkText}|${mentionLink.mentionType.sign}${mentionLink.name}`;
 	}
 
 	return `[[${linkText}]]`;

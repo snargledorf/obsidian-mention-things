@@ -26,8 +26,9 @@ export interface MentionType {
  * Represents a link to a mentioned item
  */
 export interface MentionLink {
-	type: MentionType;
+	mentionType: MentionType;
 	name: string;
+	type: 'alias' | 'filename';
 	fileName: string;
 	path: string;
 }

@@ -201,7 +201,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 			mentionLink: {
 				name: context.query.substring(1),
 				fileName: context.query,
-				type: mentionType,
+				mentionType: mentionType,
 				path: path,
 			},
 			context,
@@ -213,7 +213,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	 */
 	renderSuggestion(value: MentionSuggestion, el: HTMLElement): void {
 		if (value.suggestionType === 'create') {
-			const type = value.mentionLink.type;
+			const type = value.mentionLink.mentionType;
 			const label = type?.label || 'Item';
 
 			el.setText(`Create ${label}: ${value.displayText}`);

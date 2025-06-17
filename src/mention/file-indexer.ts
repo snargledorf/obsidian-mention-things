@@ -114,7 +114,7 @@ export class FileIndexer {
 	 * Add a file to the appropriate map
 	 */
 	private addFileToMap(item: MentionLink): void {
-		const sign = item.type.sign;
+		const sign = item.mentionType.sign;
 
 		if (!sign) {
 			return;
@@ -129,7 +129,7 @@ export class FileIndexer {
 	 * Remove a file from the map
 	 */
 	private removeFileFromMap(item: MentionLink): void {
-		const sign = item.type.sign;
+		const sign = item.mentionType.sign;
 
 		if (!sign || !this.fileMaps[sign]) {
 			return;
