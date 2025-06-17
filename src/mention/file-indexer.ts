@@ -1,6 +1,6 @@
 import { App, TFile } from 'obsidian';
 import { MentionSettings, FileMaps, MentionLink } from '../types';
-import { getLinkFromPath } from './link-utils';
+import { getLinkFromPath, getLinkFromAlias } from './link-utils';
 
 /**
  * Handles indexing and tracking mentionable files
@@ -31,6 +31,16 @@ export class FileIndexer {
 				if (mentionLink) {
 					this.addFileToMap(mentionLink);
 				}
+
+				const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
+				if (fileAliases) {
+					fileAliases.forEach(alias => {
+						const aliasLink = getLinkFromAlias(alias, file, this.settings);
+						if (aliasLink) {
+							this.addFileToMap(aliasLink);
+						}
+					});
+				}
 			}
 		});
 
@@ -57,12 +67,40 @@ export class FileIndexer {
 			needsUpdate = true;
 		}
 
+		const file = this.app.vault.getFileByPath(path);
+		if (file) {
+			const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
+			if (fileAliases) {
+				fileAliases.forEach(alias => {
+					const aliasLink = getLinkFromAlias(alias, file, this.settings);
+					if (aliasLink) {
+						this.addFileToMap(aliasLink);
+						needsUpdate = true;
+					}
+				});
+			}
+		}
+
 		// Handle renamed or deleted file
 		if (originalPath) {
 			const removeItem = getLinkFromPath(originalPath, this.settings);
 			if (removeItem) {
 				this.removeFileFromMap(removeItem);
 				needsUpdate = true;
+			}
+
+			const originalFile = this.app.vault.getFileByPath(originalPath);
+			if (originalFile) {
+				const fileAliases: string[] = this.app.metadataCache.getFileCache(originalFile)?.frontmatter?.aliases;
+				if (fileAliases) {
+					fileAliases.forEach(alias => {
+						const aliasLinkToRemove = getLinkFromAlias(alias, originalFile, this.settings);
+						if (aliasLinkToRemove) {
+							this.removeFileFromMap(aliasLinkToRemove);
+							needsUpdate = true;
+						}
+					});
+				}
 			}
 		}
 
@@ -73,7 +111,7 @@ export class FileIndexer {
 	 * Add a file to the appropriate map
 	 */
 	private addFileToMap(item: MentionLink): void {
-		const sign = item.sign;
+		const sign = item.type.sign;
 
 		if (!sign) {
 			return;
@@ -88,7 +126,7 @@ export class FileIndexer {
 	 * Remove a file from the map
 	 */
 	private removeFileFromMap(item: MentionLink): void {
-		const sign = item.sign;
+		const sign = item.type.sign;
 
 		if (!sign || !this.fileMaps[sign]) {
 			return;

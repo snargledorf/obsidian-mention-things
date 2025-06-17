@@ -1,28 +1,31 @@
-import { Plugin } from 'obsidian';
-import { MentionSettings } from './types';
+import { App, Plugin, PluginManifest } from 'obsidian';
 import { DEFAULT_SETTINGS } from './constants';
 import { MentionManager } from './mention/mention-manager';
 import { SuggestionProvider } from './editor/suggestion';
 import { SettingsTab } from './settings/settings-tab';
 
 export default class MentionThingsPlugin extends Plugin {
-	settings: MentionSettings;
+	settings = DEFAULT_SETTINGS;
 	mentionManager: MentionManager;
 	suggestionProvider: SuggestionProvider;
+
+	constructor(app: App, manifest: PluginManifest) {
+		super(app, manifest);
+
+		// Initialize the mention manager
+		this.mentionManager = new MentionManager(app, this.settings);
+
+		// Initialize the suggestion provider
+		this.suggestionProvider = new SuggestionProvider(
+			app,
+			this.settings,
+			this.mentionManager,
+		);
+	}
 
 	async onload() {
 		// Load settings
 		await this.loadSettings();
-
-		// Initialize the mention manager
-		this.mentionManager = new MentionManager(this.app, this.settings);
-
-		// Initialize the suggestion provider
-		this.suggestionProvider = new SuggestionProvider(
-			this.app,
-			this.settings,
-			this.mentionManager,
-		);
 
 		// Register the suggestion provider with the editor
 		this.registerEditorSuggest(this.suggestionProvider);
@@ -87,11 +90,7 @@ export default class MentionThingsPlugin extends Plugin {
 	 * Load settings from disk
 	 */
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData(),
-		);
+		Object.assign(this.settings, await this.loadData());
 	}
 
 	/**

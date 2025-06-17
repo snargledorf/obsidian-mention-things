@@ -4,7 +4,7 @@ import { MentionSettings } from './types';
  * Default plugin settings
  */
 export const DEFAULT_SETTINGS: MentionSettings = {
-	mentionTypes: [],
+	mentionTypes: {},
 	matchStart: true,
 	maxMatchLength: 15,
 	stopCharacters: '?!"\'`:;/#+*=&%$§<>',

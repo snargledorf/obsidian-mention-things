@@ -42,13 +42,6 @@ export class MentionManager {
 	}
 
 	/**
-	 * Get all used signs from the settings
-	 */
-	getUsedSigns(): string[] {
-		return this.settings.mentionTypes.map(object => object.sign).filter(Boolean) as string[];
-	}
-
-	/**
 	 * Update settings with new values
 	 * @param settings New settings
 	 */

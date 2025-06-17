@@ -1,11 +1,12 @@
-import { App, EditorSuggest, Editor, EditorPosition, TFile } from 'obsidian';
+import { App, EditorSuggest, Editor, EditorPosition, TFile, EditorSuggestContext, EditorSuggestTriggerInfo } from 'obsidian';
 import { MentionManager } from '../mention/mention-manager';
-import { getTypeDef, createMentionLink } from '../mention/link-utils';
+import { createMentionLink } from '../mention/link-utils';
 import {
 	MentionSettings,
 	MentionSuggestion,
-	EditorSuggestTriggerInfo,
-	EditorSuggestContext,
+	FileMaps,
+	MentionLink,
+	MentionType
 } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
 
@@ -15,8 +16,7 @@ import { DEFAULT_SETTINGS } from '../constants';
 export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	private settings: MentionSettings;
 	private mentionManager: MentionManager;
-	private currSign: string = '';
-	private fileMaps: any;
+	private fileMaps: FileMaps;
 
 	constructor(app: App, settings: MentionSettings, mentionManager: MentionManager) {
 		super(app);
@@ -28,7 +28,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	/**
 	 * Update the suggestions map
 	 */
-	setSuggestionsMap(maps: any): void {
+	setSuggestionsMap(maps: FileMaps): void {
 		this.fileMaps = maps;
 	}
 
@@ -43,14 +43,13 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 		}
 
 		// Find the most recent mention sign
-		const { signIndex, sign } = this.findMostRecentSign(charsLeftOfCursor);
+		const { signIndex } = this.findMostRecentMentionType(charsLeftOfCursor);
 
 		if (signIndex < 0) {
 			return null;
 		}
 
-		this.currSign = sign;
-		const query = charsLeftOfCursor.substring(signIndex + 1);
+		const query = charsLeftOfCursor.substring(signIndex);
 
 		// Check various conditions that would prevent showing suggestions
 		if (!this.shouldShowSuggestions(query, signIndex, charsLeftOfCursor)) {
@@ -60,20 +59,19 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 		return {
 			start: { line: cursor.line, ch: signIndex },
 			end: { line: cursor.line, ch: cursor.ch },
-			query,
+			query
 		};
 	}
 
 	/**
 	 * Find the most recent mention sign in the text
 	 */
-	private findMostRecentSign(text: string): { signIndex: number, sign: string } {
-		const usedSigns = this.mentionManager.getUsedSigns();
+	private findMostRecentMentionType(text: string): { signIndex: number, mentionType: MentionType } {
 		let signIndex = -1;
 		let foundSign = '';
 
-		for (let sign of usedSigns) {
-			let index = text.lastIndexOf(sign);
+		for (const sign in this.settings.mentionTypes) {
+			const index = text.lastIndexOf(sign);
 
 			if (index !== -1 && index > signIndex) {
 				signIndex = index;
@@ -81,7 +79,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 			}
 		}
 
-		return { signIndex, sign: foundSign };
+		return { signIndex, mentionType: this.settings.mentionTypes[foundSign] };
 	}
 
 	/**
@@ -125,14 +123,18 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	 */
 	getSuggestions(context: EditorSuggestContext): MentionSuggestion[] {
 		let suggestions: MentionSuggestion[] = [];
-		let map = this.fileMaps[this.currSign] || {};
-		const term = context.query.toLowerCase();
+
+		const { mentionType } = this.findMostRecentMentionType(context.query);
+		const signMap = this.fileMaps[mentionType.sign] || {};
 
 		// Add matching existing items
-		suggestions = this.getMatchingSuggestions(map, term, context);
+		suggestions = this.getMatchingSuggestions(signMap, context);
 
-		// Always add option to create new item
-		suggestions.push(this.createNewItemSuggestion(context));
+		// Check if we should add option to create new item
+		
+		if (context.query.substring(1).length > 0) {
+			suggestions.push(this.createNewItemSuggestion(context, mentionType));
+		}
 
 		return suggestions;
 	}
@@ -140,23 +142,33 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	/**
 	 * Get suggestions that match the search term
 	 */
-	private getMatchingSuggestions(map: any, term: string, context: EditorSuggestContext): MentionSuggestion[] {
+	private getMatchingSuggestions(signMap: { [name: string]: MentionLink; }, context: EditorSuggestContext): MentionSuggestion[] {
 		const suggestions: MentionSuggestion[] = [];
 
-		for (let key in map) {
-			if (!key) {
+		for (const name in signMap) {
+			if (!name) {
 				continue;
 			}
 
-			if (this.isMatch(key, term)) {
+			if (this.isMatch(name, context.query)) {
+				const mentionLink = signMap[name];
+				
+				let displayText = mentionLink.name.trim();
+				
+				if (mentionLink.fileName !== mentionLink.name) {
+					displayText += ` (${mentionLink.fileName})`;
+				}
+
 				suggestions.push({
 					suggestionType: 'set',
-					displayText: map[key].name.trim(),
-					linkName: map[key].name,
+					displayText: displayText,
+					mentionLink: mentionLink,
 					context,
 				});
 			}
 		}
+
+		suggestions.sort((a, b) => a.displayText.localeCompare(b.displayText));
 
 		return suggestions;
 	}
@@ -164,22 +176,33 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	/**
 	 * Check if an item matches the search term based on settings
 	 */
-	private isMatch(key: string, term: string): boolean {
+	private isMatch(name: string, query: string): boolean {
+		const queryText = query.substring(1).toLowerCase();
 		if (this.settings.matchStart) {
-			return key.startsWith(term);
+			return name.startsWith(queryText);
 		} else {
-			return key.includes(term);
+			return name.includes(queryText);
 		}
 	}
 
 	/**
 	 * Create a suggestion for creating a new item
 	 */
-	private createNewItemSuggestion(context: EditorSuggestContext): MentionSuggestion {
+	private createNewItemSuggestion(context: EditorSuggestContext, mentionType: MentionType): MentionSuggestion {
+		let path = context.query + '.md';
+		if (mentionType.label) {
+			path = `${mentionType.label}/${context.query}.md`;
+		}
+		
 		return {
 			suggestionType: 'create',
 			displayText: context.query,
-			linkName: context.query,
+			mentionLink: {
+				name: context.query.substring(1),
+				fileName: context.query,
+				type: mentionType,
+				path: path,
+			},
 			context,
 		};
 	}
@@ -189,7 +212,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	 */
 	renderSuggestion(value: MentionSuggestion, el: HTMLElement): void {
 		if (value.suggestionType === 'create') {
-			const type = getTypeDef(this.settings.mentionTypes, this.currSign);
+			const type = value.mentionLink.type;
 			const label = type?.label || 'Item';
 
 			el.setText(`Create ${label}: ${value.displayText}`);
@@ -201,13 +224,21 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	/**
 	 * Handle selection of a suggestion
 	 */
-	selectSuggestion(value: MentionSuggestion, evt: MouseEvent | KeyboardEvent): void {
-		const link = createMentionLink(this.currSign, value.linkName);
+	async selectSuggestion(value: MentionSuggestion, evt: MouseEvent | KeyboardEvent): Promise<void> {
+		if (value.suggestionType === 'create') {
+			await this.createSuggestionFile(value);
+		}
+
+		const link = createMentionLink(value.mentionLink);
 
 		value.context.editor.replaceRange(
 			link,
 			value.context.start,
-			value.context.end,
+			value.context.end
 		);
+	}
+
+	async createSuggestionFile(value: MentionSuggestion) {
+		await this.app.vault.create(value.mentionLink.path, '');
 	}
 }

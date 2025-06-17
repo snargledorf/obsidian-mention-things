@@ -1,20 +1,24 @@
-import { EditorPosition, Editor } from 'obsidian';
+import { EditorSuggestContext } from "obsidian";
 
 /**
  * Plugin settings interface
  */
 export interface MentionSettings {
-	mentionTypes: MentionType[];
+	mentionTypes: MentionTypes;
 	matchStart?: boolean;
 	maxMatchLength?: number;
 	stopCharacters?: string;
+}
+
+export interface MentionTypes {
+	[sign: string]: MentionType;
 }
 
 /**
  * Represents a type of mention with its sign and label
  */
 export interface MentionType {
-	sign?: string;
+	sign: string;
 	label?: string;
 }
 
@@ -22,8 +26,9 @@ export interface MentionType {
  * Represents a link to a mentioned item
  */
 export interface MentionLink {
-	sign: string;
+	type: MentionType;
 	name: string;
+	fileName: string;
 	path: string;
 }
 
@@ -32,7 +37,7 @@ export interface MentionLink {
  */
 export interface FileMaps {
 	[sign: string]: {
-		[key: string]: MentionLink;
+		[name: string]: MentionLink;
 	};
 }
 
@@ -49,25 +54,6 @@ export interface AvailableSigns {
 export interface MentionSuggestion {
 	suggestionType: 'set' | 'create';
 	displayText: string;
-	linkName: string;
-	context: any;
-}
-
-/**
- * Type definition for EditorSuggest trigger info
- */
-export interface EditorSuggestTriggerInfo {
-	start: EditorPosition;
-	end: EditorPosition;
-	query: string;
-}
-
-/**
- * Type definition for EditorSuggest context
- */
-export interface EditorSuggestContext {
-	start: EditorPosition;
-	end: EditorPosition;
-	query: string;
-	editor: Editor;
+	mentionLink: MentionLink;
+	context: EditorSuggestContext;
 }
