@@ -20,6 +20,7 @@ export interface MentionTypes {
 export interface MentionType {
 	sign: string;
 	label?: string;
+	templatePath?: string;
 }
 
 /**
