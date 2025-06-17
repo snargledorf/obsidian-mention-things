@@ -1,4 +1,5 @@
-import { MentionSettings, MentionType, MentionLink } from '../types';
+import { TFile } from 'obsidian';
+import { MentionSettings, MentionLink } from '../types';
 
 /**
  * Extract mention information from a file path
@@ -11,24 +12,19 @@ export function getLinkFromPath(path: string, settings: MentionSettings): Mentio
 		return null;
 	}
 
-	for (let i = 0; i < settings.mentionTypes.length; i++) {
-		const type = settings.mentionTypes[i];
-
-		if (!type?.sign) {
+	for (const sign in settings.mentionTypes) {
+		if (!path.includes('/' + sign)) {
 			continue;
 		}
 
-		if (!path.includes('/' + type.sign)) {
-			continue;
-		}
+		const regex = new RegExp(`/([${sign}]([^/]+))\\.md$`);
+		const result = regex.exec(path);
 
-		const regex = new RegExp(`/${type.sign}([^/]+)\\.md$`);
-		let result = regex.exec(path);
-
-		if (result?.[1]) {
+		if (result?.[2]) {
 			return {
-				sign: type.sign,
-				name: result[1],
+				type: settings.mentionTypes[sign],
+				name: result[2],
+				fileName: result[1],
 				path,
 			};
 		}
@@ -37,16 +33,29 @@ export function getLinkFromPath(path: string, settings: MentionSettings): Mentio
 	return null;
 }
 
-/**
- * Find a mention type definition by its sign
- * @param types Array of mention types
- * @param sign Sign character to look for
- * @returns MentionType if found, null otherwise
- */
-export function getTypeDef(types: MentionType[], sign: string): MentionType | null {
-	for (let i = 0; i < types.length; i++) {
-		if (sign === types[i]?.sign) {
-			return types[i];
+export function getLinkFromAlias(alias: string, file: TFile, settings: MentionSettings): MentionLink | null {
+	if (file.extension !== 'md') {
+		return null;
+	}
+
+	for (const sign in settings.mentionTypes) {
+		if (!alias.startsWith(sign)) {
+			continue;
+		}
+
+		const aliasRegex = new RegExp(`[${sign}]([^/]+)$`);
+		const aliasRegexResult = aliasRegex.exec(alias);
+
+		const fileNameRegex = new RegExp(`([${sign}]([^/]+))\\.md$`);
+		const fileNameRegexResult = fileNameRegex.exec(file.name);
+
+		if (aliasRegexResult?.[1] && fileNameRegexResult?.[1]) {
+			return {
+				type: settings.mentionTypes[sign],
+				name: aliasRegexResult[1],
+				fileName: fileNameRegexResult[1],
+				path: file.path,
+			};
 		}
 	}
 
@@ -59,6 +68,11 @@ export function getTypeDef(types: MentionType[], sign: string): MentionType | nu
  * @param name The name to link to
  * @returns Formatted link string
  */
-export function createMentionLink(sign: string, name: string): string {
-	return `[[${sign}${name}]]`;
+export function createMentionLink(mentionLink: MentionLink): string {
+	let linkText = mentionLink.type.sign + mentionLink.name;
+	if (mentionLink.fileName !== linkText) {
+		linkText = `${mentionLink.fileName}|${linkText}`;
+	}
+
+	return `[[${linkText}]]`;
 }

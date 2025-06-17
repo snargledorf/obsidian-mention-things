@@ -1,6 +1,6 @@
 import { App, TFile } from 'obsidian';
 import { MentionSettings, FileMaps, MentionLink } from '../types';
-import { getLinkFromPath } from './link-utils';
+import { getLinkFromPath, getLinkFromAlias } from './link-utils';
 
 /**
  * Handles indexing and tracking mentionable files
@@ -31,6 +31,16 @@ export class FileIndexer {
 				if (mentionLink) {
 					this.addFileToMap(mentionLink);
 				}
+
+				const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
+				if (fileAliases) {
+					fileAliases.forEach(alias => {
+						const aliasLink = getLinkFromAlias(alias, file, this.settings);
+						if (aliasLink) {
+							this.addFileToMap(aliasLink);
+						}
+					});
+				}
 			}
 		});
 
@@ -44,36 +54,67 @@ export class FileIndexer {
 		return this.fileMaps;
 	}
 
-	/**
-	 * Update the file index when a file is created, deleted, or renamed
-	 */
-	updateIndex(path: string, originalPath?: string): boolean {
+	fileCreated(file: TFile) {
 		let needsUpdate = false;
 
 		// Handle new or updated file
-		const addItem = getLinkFromPath(path, this.settings);
+		const addItem = getLinkFromPath(file.path, this.settings);
 		if (addItem) {
 			this.addFileToMap(addItem);
 			needsUpdate = true;
 		}
 
-		// Handle renamed or deleted file
-		if (originalPath) {
-			const removeItem = getLinkFromPath(originalPath, this.settings);
-			if (removeItem) {
-				this.removeFileFromMap(removeItem);
-				needsUpdate = true;
-			}
+		const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
+		if (fileAliases) {
+			fileAliases.forEach(alias => {
+				const aliasLink = getLinkFromAlias(alias, file, this.settings);
+				if (aliasLink) {
+					this.addFileToMap(aliasLink);
+					needsUpdate = true;
+				}
+			});
+		}
+
+		return needsUpdate;
+	}
+
+	fileDeleted(file: TFile): boolean {
+		let needsUpdate = false;
+
+		// If the file doesn't exist, it might have been deleted
+		const removeItem = getLinkFromPath(file.path, this.settings);
+		if (removeItem) {
+			this.removeFileFromMap(removeItem);
+			needsUpdate = true;
+		}
+
+		const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
+		if (fileAliases) {
+			fileAliases.forEach(alias => {
+				const aliasLinkToRemove = getLinkFromAlias(alias, file, this.settings);
+				if (aliasLinkToRemove) {
+					this.removeFileFromMap(aliasLinkToRemove);
+					needsUpdate = true;
+				}
+			});
 		}
 
 		return needsUpdate;
 	}
 
 	/**
+	 * Update the file index when a file is created, deleted, or renamed
+	 */
+	fileRenamed(file: TFile, originalPath?: string): boolean {
+		// The fileCreated function will update the path
+		return this.fileCreated(file);
+	}
+
+	/**
 	 * Add a file to the appropriate map
 	 */
 	private addFileToMap(item: MentionLink): void {
-		const sign = item.sign;
+		const sign = item.type.sign;
 
 		if (!sign) {
 			return;
@@ -88,7 +129,7 @@ export class FileIndexer {
 	 * Remove a file from the map
 	 */
 	private removeFileFromMap(item: MentionLink): void {
-		const sign = item.sign;
+		const sign = item.type.sign;
 
 		if (!sign || !this.fileMaps[sign]) {
 			return;

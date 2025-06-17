@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import { AvailableSigns } from '../types';
+import { AvailableSigns, MentionType } from '../types';
 import { ALLOWED_SIGNS } from '../constants';
 import MentionThingsPlugin from '../main';
 
@@ -19,16 +19,13 @@ export class SettingsTab extends PluginSettingTab {
 	 */
 	display(): void {
 		const { containerEl } = this;
-		let usedSigns = this.plugin.settings.mentionTypes
-			.map(object => object.sign)
-			.filter((sign): sign is string => sign !== undefined);
 
 		containerEl.empty();
 
 		new Setting(containerEl).setName('Mention Things').setHeading();
 
 		// Render mention types section
-		this.renderMentionTypesSection(containerEl, usedSigns);
+		this.renderMentionTypesSection(containerEl);
 
 		// Render general settings section
 		this.renderGeneralSettings(containerEl);
@@ -37,19 +34,31 @@ export class SettingsTab extends PluginSettingTab {
 	/**
 	 * Render the mention types section of the settings
 	 */
-	private renderMentionTypesSection(containerEl: HTMLElement, usedSigns: string[]): void {
+	private renderMentionTypesSection(containerEl: HTMLElement): void {
 		// Render each mention type
-		this.plugin.settings.mentionTypes.forEach((value, index) => {
-			this.renderMentionTypeRow(containerEl, value, index, usedSigns);
-		});
+		for (const sign in this.plugin.settings.mentionTypes) {
+			const mentionType = this.plugin.settings.mentionTypes[sign];
+			this.renderMentionTypeRow(containerEl, mentionType);
+		}
 
-		// Add button for new type
+		if (this.hasAvailableSigns()) {
+			// Add button for new type
+			this.renderNewTypeButton(containerEl);
+		}
+	}
+
+	private hasAvailableSigns() {
+		return Object.keys(this.getAvailableSigns('')).length > 0;
+	}
+
+	private renderNewTypeButton(containerEl: HTMLElement) {
 		new Setting(containerEl)
 			.addButton(cb => {
 				cb.setButtonText('New type')
 					.setCta()
 					.onClick(async () => {
-						this.plugin.settings.mentionTypes.push({});
+						const firstAvailableSign = Object.keys(this.getAvailableSigns(''))[0];
+						this.plugin.settings.mentionTypes[firstAvailableSign] = { sign: firstAvailableSign };
 						await this.plugin.saveSettings();
 						this.display();
 					});
@@ -59,17 +68,17 @@ export class SettingsTab extends PluginSettingTab {
 	/**
 	 * Render a single mention type row
 	 */
-	private renderMentionTypeRow(containerEl: HTMLElement, value: any, index: number, usedSigns: string[]): void {
+	private renderMentionTypeRow(containerEl: HTMLElement, mentionType: MentionType): void {
 		const setting = new Setting(containerEl);
-		const availableSigns = this.getAvailableSigns(usedSigns, value?.sign);
+		const availableSigns = this.getAvailableSigns(mentionType.sign);
 
 		// Sign dropdown
 		setting.addDropdown(
 			list => list
 				.addOptions(availableSigns)
-				.setValue(value?.sign || '')
+				.setValue(mentionType?.sign)
 				.onChange(async (value) => {
-					this.plugin.settings.mentionTypes[index].sign = value;
+					mentionType.sign = value;
 					await this.plugin.saveSettings();
 					this.display();
 				}),
@@ -79,9 +88,9 @@ export class SettingsTab extends PluginSettingTab {
 		setting.addText(
 			text => text
 				.setPlaceholder('Type label, for example "Person"')
-				.setValue(value?.label || '')
+				.setValue(mentionType?.label || '')
 				.onChange(async (value) => {
-					this.plugin.settings.mentionTypes[index].label = value;
+					mentionType.label = value;
 					await this.plugin.saveSettings();
 				})
 				.inputEl.addClass('type_label'),
@@ -93,7 +102,7 @@ export class SettingsTab extends PluginSettingTab {
 				.setIcon('cross')
 				.setTooltip('Delete')
 				.onClick(async () => {
-					this.plugin.settings.mentionTypes.splice(index, 1);
+					delete this.plugin.settings.mentionTypes[mentionType.sign];
 					await this.plugin.saveSettings();
 					this.display();
 				}),
@@ -159,11 +168,11 @@ export class SettingsTab extends PluginSettingTab {
 	 * @param currentSign Current sign for this type (to allow keeping the same sign)
 	 * @returns Object mapping signs to display values
 	 */
-	private getAvailableSigns(usedSigns: string[], currentSign?: string): AvailableSigns {
+	private getAvailableSigns(currentSign?: string): AvailableSigns {
 		const availableSigns: AvailableSigns = {};
 
 		ALLOWED_SIGNS.forEach(sign => {
-			if (currentSign === sign || !usedSigns.includes(sign)) {
+			if (currentSign === sign || !this.plugin.settings.mentionTypes[sign]) {
 				availableSigns[sign] = `${sign}Name`;
 			}
 		});
