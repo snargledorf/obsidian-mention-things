@@ -13,22 +13,16 @@ export function getLinkFromPath(path: string, settings: MentionSettings): Mentio
 	}
 
 	for (const sign in settings.mentionTypes) {
-		const type = settings.mentionTypes[sign];
-
-		if (!type?.sign) {
+		if (!path.includes('/' + sign)) {
 			continue;
 		}
 
-		if (!path.includes('/' + type.sign)) {
-			continue;
-		}
-
-		const regex = new RegExp(`/(${type.sign}([^/]+))\\.md$`);
+		const regex = new RegExp(`/([${sign}]([^/]+))\\.md$`);
 		const result = regex.exec(path);
 
 		if (result?.[2]) {
 			return {
-				type: type,
+				type: settings.mentionTypes[sign],
 				name: result[2],
 				fileName: result[1],
 				path,
@@ -45,21 +39,19 @@ export function getLinkFromAlias(alias: string, file: TFile, settings: MentionSe
 	}
 
 	for (const sign in settings.mentionTypes) {
-		const type = settings.mentionTypes[sign];
-
-		if (!type?.sign || !alias.startsWith(type.sign)) {
+		if (!alias.startsWith(sign)) {
 			continue;
 		}
 
-		const aliasRegex = new RegExp(`${type.sign}([^/]+)$`);
+		const aliasRegex = new RegExp(`[${sign}]([^/]+)$`);
 		const aliasRegexResult = aliasRegex.exec(alias);
 
-		const fileNameRegex = new RegExp(`(${type.sign}([^/]+))\\.md$`);
+		const fileNameRegex = new RegExp(`([${sign}]([^/]+))\\.md$`);
 		const fileNameRegexResult = fileNameRegex.exec(file.name);
 
 		if (aliasRegexResult?.[1] && fileNameRegexResult?.[1]) {
 			return {
-				type: type,
+				type: settings.mentionTypes[sign],
 				name: aliasRegexResult[1],
 				fileName: fileNameRegexResult[1],
 				path: file.path,

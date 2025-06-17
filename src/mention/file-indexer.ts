@@ -60,15 +60,15 @@ export class FileIndexer {
 	updateIndex(path: string, originalPath?: string): boolean {
 		let needsUpdate = false;
 
-		// Handle new or updated file
-		const addItem = getLinkFromPath(path, this.settings);
-		if (addItem) {
-			this.addFileToMap(addItem);
-			needsUpdate = true;
-		}
-
 		const file = this.app.vault.getFileByPath(path);
 		if (file) {
+			// Handle new or updated file
+			const addItem = getLinkFromPath(path, this.settings);
+			if (addItem) {
+				this.addFileToMap(addItem);
+				needsUpdate = true;
+			}
+
 			const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
 			if (fileAliases) {
 				fileAliases.forEach(alias => {
@@ -78,6 +78,13 @@ export class FileIndexer {
 						needsUpdate = true;
 					}
 				});
+			}
+		} else {
+			// If the file doesn't exist, it might have been deleted
+			const removeItem = getLinkFromPath(path, this.settings);
+			if (removeItem) {
+				this.removeFileFromMap(removeItem);
+				needsUpdate = true;
 			}
 		}
 

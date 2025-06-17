@@ -86,18 +86,19 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	 * Determine if suggestions should be shown based on various conditions
 	 */
 	private shouldShowSuggestions(query: string, signIndex: number, charsLeftOfCursor: string): boolean {
-		if (!query) {
+		const name = query?.substring(1).trim();
+		if (!name) {
 			return false;
 		}
 
 		// Check if query includes closing brackets
-		if (query.includes(']]')) {
+		if (name.includes(']]')) {
 			return false;
 		}
 
 		// Check if query exceeds max length
 		const maxMatchLength = this.settings.maxMatchLength ?? DEFAULT_SETTINGS.maxMatchLength;
-		if (maxMatchLength && query.length > maxMatchLength) {
+		if (maxMatchLength && name.length > maxMatchLength) {
 			return false;
 		}
 
@@ -105,7 +106,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 		const stopCharacters = this.settings.stopCharacters ?? DEFAULT_SETTINGS.stopCharacters;
 		if (stopCharacters) {
 			for (const char of stopCharacters) {
-				if (query.includes(char)) {
+				if (name.includes(char)) {
 					return false;
 				}
 			}
