@@ -1,4 +1,4 @@
-import { App, Plugin, PluginManifest } from 'obsidian';
+import { App, Plugin, PluginManifest, TFile } from 'obsidian';
 import { DEFAULT_SETTINGS } from './constants';
 import { MentionManager } from './mention/mention-manager';
 import { SuggestionProvider } from './editor/suggestion';
@@ -50,7 +50,9 @@ export default class MentionThingsPlugin extends Plugin {
 		// Handle file deletion
 		this.registerEvent(
 			this.app.vault.on('delete', async (file) => {
-				const updated = this.mentionManager.handleFileEvent(file);
+				if (!(file instanceof TFile)) return;
+
+				const updated = this.mentionManager.handleFileDeleted(file);
 				if (updated) {
 					this.refreshSuggestions();
 				}
@@ -60,7 +62,10 @@ export default class MentionThingsPlugin extends Plugin {
 		// Handle file creation
 		this.registerEvent(
 			this.app.vault.on('create', async (file) => {
-				const updated = this.mentionManager.handleFileEvent(file);
+
+				if (!(file instanceof TFile)) return;
+
+				const updated = this.mentionManager.handleFileCreated(file);
 				if (updated) {
 					this.refreshSuggestions();
 				}
@@ -70,7 +75,10 @@ export default class MentionThingsPlugin extends Plugin {
 		// Handle file renaming
 		this.registerEvent(
 			this.app.vault.on('rename', async (file, oldPath) => {
-				const updated = this.mentionManager.handleFileEvent(file, oldPath);
+
+				if (!(file instanceof TFile)) return;
+
+				const updated = this.mentionManager.handleFileRenamed(file, oldPath);
 				if (updated) {
 					this.refreshSuggestions();
 				}

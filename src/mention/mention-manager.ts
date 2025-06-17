@@ -1,4 +1,4 @@
-import { App } from 'obsidian';
+import { App, TFile } from 'obsidian';
 import { MentionSettings, FileMaps } from '../types';
 import { FileIndexer } from './file-indexer';
 
@@ -28,17 +28,22 @@ export class MentionManager {
 		return this.fileIndexer.getFileMaps();
 	}
 
+	handleFileCreated(file: TFile) {
+		return this.fileIndexer.fileCreated(file);
+	}
+
+	handleFileDeleted(file: TFile): boolean {
+		return this.fileIndexer.fileDeleted(file);
+	}
+
 	/**
 	 * Handle file events (create, delete, rename)
-	 * @param fileEvent File event data
+	 * @param file File event data
 	 * @param originalPath Original path for rename events
 	 * @returns Whether the file maps were updated
 	 */
-	handleFileEvent(fileEvent: {
-		path: string,
-		deleted?: boolean
-	}, originalPath?: string): boolean {
-		return this.fileIndexer.updateIndex(fileEvent.path, originalPath);
+	handleFileRenamed(file: TFile, originalPath?: string): boolean {
+		return this.fileIndexer.fileRenamed(file, originalPath);
 	}
 
 	/**
