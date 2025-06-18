@@ -84,6 +84,17 @@ export default class MentionThingsPlugin extends Plugin {
 				}
 			}),
 		);
+
+		this.registerEvent(
+			this.app.metadataCache.on('changed', async (file) => {
+				if (!(file instanceof TFile)) return;
+
+				const updated = this.mentionManager.handleFileModified(file);
+				if (updated) {
+					this.refreshSuggestions();
+				}
+			})
+		);
 	}
 
 	/**
