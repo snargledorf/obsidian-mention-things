@@ -203,6 +203,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 				fileName: context.query,
 				mentionType: mentionType,
 				path: path,
+				type: 'filename'
 			},
 			context,
 		};
@@ -239,7 +240,27 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 		);
 	}
 
-	async createSuggestionFile(value: MentionSuggestion) {
-		await this.app.vault.create(value.mentionLink.path, '');
+	private async createSuggestionFile(value: MentionSuggestion) : Promise<void> {
+		const contents = await this.loadMentionTypeTemplate(value.mentionLink.mentionType);
+		await this.app.vault.create(value.mentionLink.path, contents);
+	}
+
+	private async loadMentionTypeTemplate(mentionType: MentionType) : Promise<string> {
+		let contents = '';
+		
+		let templatePath = mentionType.templatePath;
+		if (templatePath) {
+			if (!templatePath.endsWith('.md')) {
+				templatePath += '.md';
+			}
+
+			const templateFile = this.app.vault.getFileByPath(templatePath);
+
+			if (templateFile) {
+				contents = await this.app.vault.read(templateFile);
+			}
+		}
+
+		return contents;
 	}
 }
