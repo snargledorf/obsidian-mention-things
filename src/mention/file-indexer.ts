@@ -1,7 +1,6 @@
 import { App, TFile } from 'obsidian';
 import { MentionSettings, FileMaps, MentionLink } from '../types';
 import { getLinkFromPath, getLinkFromAlias } from './link-utils';
-import { get } from 'http';
 
 /**
  * Handles indexing and tracking mentionable files
