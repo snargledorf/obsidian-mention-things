@@ -1,6 +1,7 @@
 import { App, TFile } from 'obsidian';
 import { MentionSettings, FileMaps, MentionLink } from '../types';
 import { getLinkFromPath, getLinkFromAlias } from './link-utils';
+import { get } from 'http';
 
 /**
  * Handles indexing and tracking mentionable files
@@ -55,6 +56,27 @@ export class FileIndexer {
 	}
 
 	fileCreated(file: TFile) {
+		return this.fileModified(file);
+	}
+
+	fileDeleted(file: TFile): boolean {
+		return this.removeFileFromMap(file.path);
+	}
+
+	/**
+	 * Update the file index when a file is renamed
+	 */
+	fileRenamed(file: TFile, originalPath: string): boolean {
+		const newMentionLink = getLinkFromPath(file.path, this.settings);
+				
+		if (newMentionLink) {
+			return this.updateFilePathInMap(originalPath, newMentionLink);
+		} else {
+			return this.removeFileFromMap(originalPath);
+		}
+	}
+
+	fileModified(file: TFile) {
 		let needsUpdate = false;
 
 		// Handle new or updated file
@@ -78,38 +100,6 @@ export class FileIndexer {
 		return needsUpdate;
 	}
 
-	fileDeleted(file: TFile): boolean {
-		let needsUpdate = false;
-
-		// If the file doesn't exist, it might have been deleted
-		const removeItem = getLinkFromPath(file.path, this.settings);
-		if (removeItem) {
-			this.removeFileFromMap(removeItem);
-			needsUpdate = true;
-		}
-
-		const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
-		if (fileAliases) {
-			fileAliases.forEach(alias => {
-				const aliasLinkToRemove = getLinkFromAlias(alias, file, this.settings);
-				if (aliasLinkToRemove) {
-					this.removeFileFromMap(aliasLinkToRemove);
-					needsUpdate = true;
-				}
-			});
-		}
-
-		return needsUpdate;
-	}
-
-	/**
-	 * Update the file index when a file is created, deleted, or renamed
-	 */
-	fileRenamed(file: TFile, originalPath?: string): boolean {
-		// The fileCreated function will update the path
-		return this.fileCreated(file);
-	}
-
 	/**
 	 * Add a file to the appropriate map
 	 */
@@ -124,18 +114,36 @@ export class FileIndexer {
 		this.fileMaps[sign] = this.fileMaps[sign] || {};
 		this.fileMaps[sign][key] = item;
 	}
+	
+	updateFilePathInMap(originalPath: string, newMentionLink: MentionLink): boolean {
+		let updated = false;
+
+		for (const sign in this.fileMaps) {
+			const signMap = this.fileMaps[sign];
+			for (const name in signMap) {
+				if (signMap[name].path === originalPath) {
+					signMap[name].path = newMentionLink.path;
+					updated = true;
+				}
+			}
+		}
+		return updated;
+	}
 
 	/**
 	 * Remove a file from the map
 	 */
-	private removeFileFromMap(item: MentionLink): void {
-		const sign = item.mentionType.sign;
-
-		if (!sign || !this.fileMaps[sign]) {
-			return;
+	private removeFileFromMap(path: string): boolean {
+		let updated = false;
+		for (const sign in this.fileMaps) {
+			const signMap = this.fileMaps[sign];
+			for (const name in signMap) {
+				if (signMap[name].path === path) {
+					delete signMap[name];
+					updated = true;
+				}
+			}
 		}
-
-		const key = item.name.toLowerCase();
-		delete this.fileMaps[sign][key];
+		return updated;
 	}
 }

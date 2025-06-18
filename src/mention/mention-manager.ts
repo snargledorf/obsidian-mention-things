@@ -36,13 +36,17 @@ export class MentionManager {
 		return this.fileIndexer.fileDeleted(file);
 	}
 
+	handleFileModified(file: TFile) {
+		return this.fileIndexer.fileModified(file);
+	}
+
 	/**
 	 * Handle file events (create, delete, rename)
 	 * @param file File event data
 	 * @param originalPath Original path for rename events
 	 * @returns Whether the file maps were updated
 	 */
-	handleFileRenamed(file: TFile, originalPath?: string): boolean {
+	handleFileRenamed(file: TFile, originalPath: string): boolean {
 		return this.fileIndexer.fileRenamed(file, originalPath);
 	}
 
