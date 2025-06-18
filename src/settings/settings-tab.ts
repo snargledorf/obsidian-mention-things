@@ -96,6 +96,18 @@ export class SettingsTab extends PluginSettingTab {
 				.inputEl.addClass('type_label'),
 		);
 
+		// Template path text field
+		setting.addText(
+			text => text
+				.setPlaceholder('Path to template file (optional)')
+				.setValue(mentionType?.templatePath || '')				
+				.onChange(async (value) => {
+					mentionType.templatePath = value;
+					await this.plugin.saveSettings();
+				})
+				.inputEl.addClass('type_template'),
+		);
+
 		// Delete button
 		setting.addExtraButton(
 			button => button

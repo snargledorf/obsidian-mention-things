@@ -20,14 +20,16 @@ export interface MentionTypes {
 export interface MentionType {
 	sign: string;
 	label?: string;
+	templatePath?: string;
 }
 
 /**
  * Represents a link to a mentioned item
  */
 export interface MentionLink {
-	type: MentionType;
+	mentionType: MentionType;
 	name: string;
+	type: 'alias' | 'filename';
 	fileName: string;
 	path: string;
 }
