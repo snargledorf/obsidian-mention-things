@@ -198,7 +198,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 				sign,
 				name: context.query.substring(1),
 				fileName: context.query,
-				type: 'filename',
+				type: LinkTypes.filename,
 			},
 			mentionType: mentionTypeSettings,
 			context

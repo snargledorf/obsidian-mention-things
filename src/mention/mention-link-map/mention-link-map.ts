@@ -20,8 +20,7 @@ export class MentionLinkMap {
 
 		const { sign, name } = linkParts;
 
-		this.addLink(name, sign, path, LinkTypes.filename);
-		return true;
+		return this.addLink(name, sign, path, LinkTypes.filename);
 	}
 
 	public removeFilenameLink(path: string): boolean {
@@ -32,8 +31,7 @@ export class MentionLinkMap {
 
 		const { sign, name } = linkParts;
 
-		this.removeLink(sign, name, path, LinkTypes.filename);
-		return true;
+		return this.removeLink(sign, name, path, LinkTypes.filename);
 	}
 
 	public addAliasLink(alias: string, path: string): boolean {
@@ -49,8 +47,7 @@ export class MentionLinkMap {
 			return false;
 		}
 
-		this.addLink(name, sign, path, LinkTypes.alias);		
-		return true;
+		return this.addLink(name, sign, path, LinkTypes.alias);
 	}
 
 	public removeAliasLink(alias: string, path: string): boolean {
@@ -61,8 +58,7 @@ export class MentionLinkMap {
 
 		const { sign, name } = aliasLinkParts;
 
-		this.removeLink(sign, name, path, LinkTypes.alias);
-		return true;
+		return this.removeLink(sign, name, path, LinkTypes.alias);
 	}
 
 	public removeLinks(path: string, type?: LinkTypes): boolean {
@@ -88,14 +84,15 @@ export class MentionLinkMap {
 	}
 
 	public updatePath(originalPath: string, newPath: string): boolean {
+		let updated = this.removeFilenameLink(originalPath);
+		updated = this.addFilenameLink(newPath) || updated;
+
 		const pathSignsWithLinkNodes = this.pathsWithLinkNodes[originalPath];
 		if (!pathSignsWithLinkNodes) {
-			return this.addFilenameLink(newPath);
+			return updated;
 		}
 
 		const copyOfSignsWithLinkNodes = Object.entries(pathSignsWithLinkNodes);
-
-		let updated = false;
 
 		for (const signAndNames of copyOfSignsWithLinkNodes) {
 			const sign = signAndNames[0];
@@ -112,12 +109,6 @@ export class MentionLinkMap {
 				const copyOfPathLinks = [...pathDetails.links];
 				for (const link of copyOfPathLinks) {
 					this.removeLink(sign, link.name, originalPath, link.type);
-					
-					const fileName = parseLinkPartsFromPath(newPath)?.fileName;
-					if (!fileName) {
-						continue;
-					}
-
 					updated = this.addLink(link.name, sign, newPath, link.type) || updated;
 				}
 			}

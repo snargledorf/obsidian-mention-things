@@ -67,15 +67,14 @@ export class FileIndexer {
 
 	fileModified(file: TFile) {
 		let needsUpdate = this.mentionMap.addFilenameLink(file.path);
+		
+		needsUpdate = this.mentionMap.removeLinks(file.path, LinkTypes.alias) || needsUpdate;
 
 		const fileAliases = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases as string[];
-
 		if (fileAliases) {
 			for (const alias of fileAliases) {
 				needsUpdate = this.mentionMap.addAliasLink(alias, file.path) || needsUpdate;
 			}
-		} else {
-			needsUpdate = this.mentionMap.removeLinks(file.path, LinkTypes.alias) || needsUpdate;
 		}
 
 		return needsUpdate;
