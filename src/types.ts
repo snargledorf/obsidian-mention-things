@@ -4,43 +4,54 @@ import { EditorSuggestContext } from "obsidian";
  * Plugin settings interface
  */
 export interface MentionSettings {
-	mentionTypes: MentionTypes;
+	mentionTypes: MentionSignsSettings;
 	matchStart?: boolean;
 	maxMatchLength?: number;
 	stopCharacters?: string;
 }
 
-export interface MentionTypes {
-	[sign: string]: MentionType;
+export interface MentionSignsSettings {
+	[sign: string]: MentionSignSettings;
 }
 
 /**
  * Represents a type of mention with its sign and label
  */
-export interface MentionType {
-	sign: string;
+export interface MentionSignSettings {
 	label?: string;
 	templatePath?: string;
 }
 
-/**
- * Represents a link to a mentioned item
- */
-export interface MentionLink {
-	mentionType: MentionType;
-	name: string;
-	type: 'alias' | 'filename';
-	fileName: string;
-	path: string;
+export type LinkType = 'alias' | 'filename';
+
+export interface SignToNameKeys {
+	[sign: string]: string[];
 }
 
-/**
- * Structure for storing mentionable files
- */
-export interface FileMaps {
-	[sign: string]: {
-		[name: string]: MentionLink;
-	};
+export interface NameKeyToSignToPathToLinkDetails {
+	[nameKey: string]: SignToPathToLinkDetails;
+}
+
+export interface SignToPathToLinkDetails {
+	[sign: string]: PathToLinkDetail;
+}
+
+export interface PathToLinkDetail {
+	[path: string]: LinkDetail;
+}
+
+export interface Link {
+	sign: string;
+	path: string;
+	name: string;
+	fileName: string;
+	type: LinkType;
+}
+
+export interface LinkDetail {
+	name: string;
+	fileName: string;
+	type: LinkType;
 }
 
 /**
@@ -56,6 +67,6 @@ export interface AvailableSigns {
 export interface MentionSuggestion {
 	suggestionType: 'set' | 'create';
 	displayText: string;
-	mentionLink: MentionLink;
+	mentionLink: LinkDetail;
 	context: EditorSuggestContext;
 }

@@ -1,5 +1,5 @@
 import { App, TFile } from 'obsidian';
-import { MentionSettings, FileMaps } from '../types';
+import { MentionSettings, MentionLinkMaps } from '../types';
 import { FileIndexer } from './file-indexer';
 
 /**
@@ -17,15 +17,15 @@ export class MentionManager {
 	/**
 	 * Initialize the mention manager
 	 */
-	initialize(): FileMaps {
+	initialize(): MentionLinkMaps {
 		return this.fileIndexer.initialize();
 	}
 
 	/**
 	 * Get the current file maps
 	 */
-	getFileMaps(): FileMaps {
-		return this.fileIndexer.getFileMaps();
+	getFileMaps(): MentionLinkMaps {
+		return this.fileIndexer.getLookup();
 	}
 
 	handleFileCreated(file: TFile) {

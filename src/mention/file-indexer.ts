@@ -1,6 +1,8 @@
 import { App, TFile } from 'obsidian';
-import { MentionSettings, FileMaps, MentionLink } from '../types';
+import { MentionSettings } from '../types';
 import { getLinkFromPath, getLinkFromAlias } from './link-utils';
+import { MentionLinkMap as MentionLinkMap } from './mention-link-map/mention-link-map';
+import { MentionLinkLookup as MentionLinkLookup } from './mention-link-map/mention-link-lookup';
 
 /**
  * Handles indexing and tracking mentionable files
@@ -8,7 +10,7 @@ import { getLinkFromPath, getLinkFromAlias } from './link-utils';
 export class FileIndexer {
 	private app: App;
 	private settings: MentionSettings;
-	private fileMaps: FileMaps = {};
+	private mentionMap: MentionLinkMap = new MentionLinkMap();
 
 	constructor(app: App, settings: MentionSettings) {
 		this.app = app;
@@ -18,40 +20,35 @@ export class FileIndexer {
 	/**
 	 * Initialize the file index by scanning all files in the vault
 	 */
-	initialize(): FileMaps {
-		this.fileMaps = {};
-
+	initialize(): MentionLinkLookup {
 		// Get all files in the vault using the proper Obsidian API
-		const files = this.app.vault.getAllLoadedFiles();
+		const filesWithAliases = this.app.vault.getAllLoadedFiles()
+			.filter(absFile => absFile instanceof TFile && absFile.extension === 'md')
+			.map(absFile => {
+				const file = absFile as TFile;
+				return {
+					file,
+					aliases: this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases as string[]
+				};
+			});
 
 		// Process each file
-		files.forEach(file => {
-			if (file instanceof TFile && file.extension === 'md') {
-				const mentionLink = getLinkFromPath(file.path, this.settings);
-				if (mentionLink) {
-					this.addFileToMap(mentionLink);
-				}
-
-				const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
-				if (fileAliases) {
-					fileAliases.forEach(alias => {
-						const aliasLink = getLinkFromAlias(alias, file, this.settings);
-						if (aliasLink) {
-							this.addFileToMap(aliasLink);
-						}
-					});
-				}
+		for (const fileWithAliases of filesWithAliases) {
+			this.mentionMap.addFilenameByPath(fileWithAliases.file.path);
+			
+			for (const alias of fileWithAliases.aliases) {
+				this.mentionMap.addAlias(alias, fileWithAliases.file.path);
 			}
-		});
+		}
 
-		return this.fileMaps;
+		return this.getLookup();
 	}
 
 	/**
 	 * Get the current file maps
 	 */
-	getFileMaps(): FileMaps {
-		return this.fileMaps;
+	getLookup(): MentionLinkLookup {
+		return this.mentionMap.buildLookup();
 	}
 
 	fileCreated(file: TFile) {
@@ -59,20 +56,14 @@ export class FileIndexer {
 	}
 
 	fileDeleted(file: TFile): boolean {
-		return this.removeFileFromMap(file.path);
+		return this.mentionMap.removeAllLinksForPath(file.path);
 	}
 
 	/**
 	 * Update the file index when a file is renamed
 	 */
 	fileRenamed(file: TFile, originalPath: string): boolean {
-		const newMentionLink = getLinkFromPath(file.path, this.settings);
-				
-		if (newMentionLink) {
-			return this.updateFilePathInMap(originalPath, newMentionLink);
-		} else {
-			return this.removeFileFromMap(originalPath);
-		}
+		
 	}
 
 	fileModified(file: TFile) {
@@ -81,7 +72,7 @@ export class FileIndexer {
 		// Handle new or updated file
 		const addItem = getLinkFromPath(file.path, this.settings);
 		if (addItem) {
-			this.addFileToMap(addItem);
+			this.addLinkToMap(addItem);
 			needsUpdate = true;
 		}
 
@@ -90,59 +81,12 @@ export class FileIndexer {
 			fileAliases.forEach(alias => {
 				const aliasLink = getLinkFromAlias(alias, file, this.settings);
 				if (aliasLink) {
-					this.addFileToMap(aliasLink);
+					this.addLinkToMap(aliasLink);
 					needsUpdate = true;
 				}
 			});
 		}
 
 		return needsUpdate;
-	}
-
-	/**
-	 * Add a file to the appropriate map
-	 */
-	private addFileToMap(item: MentionLink): void {
-		const sign = item.mentionType.sign;
-
-		if (!sign) {
-			return;
-		}
-
-		const key = item.name.toLowerCase();
-		this.fileMaps[sign] = this.fileMaps[sign] || {};
-		this.fileMaps[sign][key] = item;
-	}
-	
-	updateFilePathInMap(originalPath: string, newMentionLink: MentionLink): boolean {
-		let updated = false;
-
-		for (const sign in this.fileMaps) {
-			const signMap = this.fileMaps[sign];
-			for (const name in signMap) {
-				if (signMap[name].path === originalPath) {
-					signMap[name].path = newMentionLink.path;
-					updated = true;
-				}
-			}
-		}
-		return updated;
-	}
-
-	/**
-	 * Remove a file from the map
-	 */
-	private removeFileFromMap(path: string): boolean {
-		let updated = false;
-		for (const sign in this.fileMaps) {
-			const signMap = this.fileMaps[sign];
-			for (const name in signMap) {
-				if (signMap[name].path === path) {
-					delete signMap[name];
-					updated = true;
-				}
-			}
-		}
-		return updated;
 	}
 }

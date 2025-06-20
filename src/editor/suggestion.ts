@@ -4,9 +4,9 @@ import { createMentionLink } from '../mention/link-utils';
 import {
 	MentionSettings,
 	MentionSuggestion,
-	FileMaps,
-	MentionLink,
-	MentionType
+	MentionLinkMaps,
+	LinkDetail,
+	MentionSignSettings
 } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
 
@@ -16,7 +16,7 @@ import { DEFAULT_SETTINGS } from '../constants';
 export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	private settings: MentionSettings;
 	private mentionManager: MentionManager;
-	private fileMaps: FileMaps;
+	private fileMaps: MentionLinkMaps;
 
 	constructor(app: App, settings: MentionSettings, mentionManager: MentionManager) {
 		super(app);
@@ -28,7 +28,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	/**
 	 * Update the suggestions map
 	 */
-	setSuggestionsMap(maps: FileMaps): void {
+	setSuggestionsMap(maps: MentionLinkMaps): void {
 		this.fileMaps = maps;
 	}
 
@@ -66,7 +66,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	/**
 	 * Find the most recent mention sign in the text
 	 */
-	private findMostRecentMentionType(text: string): { signIndex: number, mentionType: MentionType } {
+	private findMostRecentMentionType(text: string): { signIndex: number, mentionType: MentionSignSettings } {
 		let signIndex = -1;
 		let foundSign = '';
 
@@ -143,7 +143,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	/**
 	 * Get suggestions that match the search term
 	 */
-	private getMatchingSuggestions(signMap: { [name: string]: MentionLink; }, context: EditorSuggestContext): MentionSuggestion[] {
+	private getMatchingSuggestions(signMap: { [name: string]: LinkDetail; }, context: EditorSuggestContext): MentionSuggestion[] {
 		const suggestions: MentionSuggestion[] = [];
 
 		for (const name in signMap) {
@@ -189,7 +189,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	/**
 	 * Create a suggestion for creating a new item
 	 */
-	private createNewItemSuggestion(context: EditorSuggestContext, mentionType: MentionType): MentionSuggestion {
+	private createNewItemSuggestion(context: EditorSuggestContext, mentionType: MentionSignSettings): MentionSuggestion {
 		let path = context.query + '.md';
 		if (mentionType.label) {
 			path = `${mentionType.label}/${context.query}.md`;
@@ -245,7 +245,7 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 		await this.app.vault.create(value.mentionLink.path, contents);
 	}
 
-	private async loadMentionTypeTemplate(mentionType: MentionType) : Promise<string> {
+	private async loadMentionTypeTemplate(mentionType: MentionSignSettings) : Promise<string> {
 		let contents = '';
 		
 		let templatePath = mentionType.templatePath;

@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import { AvailableSigns, MentionType } from '../types';
+import { AvailableSigns, MentionSignSettings } from '../types';
 import { ALLOWED_SIGNS } from '../constants';
 import MentionThingsPlugin from '../main';
 
@@ -68,7 +68,7 @@ export class SettingsTab extends PluginSettingTab {
 	/**
 	 * Render a single mention type row
 	 */
-	private renderMentionTypeRow(containerEl: HTMLElement, mentionType: MentionType): void {
+	private renderMentionTypeRow(containerEl: HTMLElement, mentionType: MentionSignSettings): void {
 		const setting = new Setting(containerEl);
 		const availableSigns = this.getAvailableSigns(mentionType.sign);
 
