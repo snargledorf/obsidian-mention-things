@@ -38,7 +38,7 @@ export class SettingsTab extends PluginSettingTab {
 		// Render each mention type
 		for (const sign in this.plugin.settings.mentionTypes) {
 			const mentionType = this.plugin.settings.mentionTypes[sign];
-			this.renderMentionTypeRow(containerEl, mentionType);
+			this.renderMentionTypeRow(containerEl, sign, mentionType);
 		}
 
 		if (this.hasAvailableSigns()) {
@@ -58,7 +58,7 @@ export class SettingsTab extends PluginSettingTab {
 					.setCta()
 					.onClick(async () => {
 						const firstAvailableSign = Object.keys(this.getAvailableSigns(''))[0];
-						this.plugin.settings.mentionTypes[firstAvailableSign] = { sign: firstAvailableSign };
+						this.plugin.settings.mentionTypes[firstAvailableSign] = { };
 						await this.plugin.saveSettings();
 						this.display();
 					});
@@ -68,29 +68,31 @@ export class SettingsTab extends PluginSettingTab {
 	/**
 	 * Render a single mention type row
 	 */
-	private renderMentionTypeRow(containerEl: HTMLElement, mentionType: MentionSignSettings): void {
+	private renderMentionTypeRow(containerEl: HTMLElement, sign: string, mentionSettings: MentionSignSettings): void {
 		const setting = new Setting(containerEl);
-		const availableSigns = this.getAvailableSigns(mentionType.sign);
+		const availableSigns = this.getAvailableSigns(sign);
 
 		// Sign dropdown
 		setting.addDropdown(
 			list => list
 				.addOptions(availableSigns)
-				.setValue(mentionType?.sign)
+				.setValue(sign)
 				.onChange(async (value) => {
-					mentionType.sign = value;
+					delete this.plugin.settings.mentionTypes[sign];
+					this.plugin.settings.mentionTypes[value] = mentionSettings;
+
 					await this.plugin.saveSettings();
 					this.display();
-				}),
+				})
 		);
 
 		// Label text field
 		setting.addText(
 			text => text
 				.setPlaceholder('Type label, for example "Person"')
-				.setValue(mentionType?.label || '')
+				.setValue(mentionSettings?.label || '')
 				.onChange(async (value) => {
-					mentionType.label = value;
+					mentionSettings.label = value;
 					await this.plugin.saveSettings();
 				})
 				.inputEl.addClass('type_label'),
@@ -100,9 +102,9 @@ export class SettingsTab extends PluginSettingTab {
 		setting.addText(
 			text => text
 				.setPlaceholder('Path to template file (optional)')
-				.setValue(mentionType?.templatePath || '')				
+				.setValue(mentionSettings?.templatePath || '')				
 				.onChange(async (value) => {
-					mentionType.templatePath = value;
+					mentionSettings.templatePath = value;
 					await this.plugin.saveSettings();
 				})
 				.inputEl.addClass('type_template'),
@@ -114,7 +116,7 @@ export class SettingsTab extends PluginSettingTab {
 				.setIcon('cross')
 				.setTooltip('Delete')
 				.onClick(async () => {
-					delete this.plugin.settings.mentionTypes[mentionType.sign];
+					delete this.plugin.settings.mentionTypes[sign];
 					await this.plugin.saveSettings();
 					this.display();
 				}),
