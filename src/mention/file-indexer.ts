@@ -28,7 +28,7 @@ export class FileIndexer {
 				const file = absFile as TFile;
 				return {
 					file,
-					aliases: this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases as string[]
+					aliases: this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases as string[] ?? []
 				};
 			});
 
