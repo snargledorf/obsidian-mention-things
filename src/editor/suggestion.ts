@@ -1,4 +1,4 @@
-import { App, EditorSuggest, Editor, EditorPosition, TFile, EditorSuggestContext, EditorSuggestTriggerInfo } from 'obsidian';
+import { App, EditorSuggest, Editor, EditorPosition, TFile, EditorSuggestContext, EditorSuggestTriggerInfo, TFolder } from 'obsidian';
 import { MentionManager } from '../mention/mention-manager';
 import { createMentionLink } from '../mention/link-utils';
 import {
@@ -9,6 +9,7 @@ import {
 	MentionSignSettings
 } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
+import * as path from 'path';
 
 /**
  * Provides suggestion functionality for mentions in the editor
@@ -241,6 +242,10 @@ export class SuggestionProvider extends EditorSuggest<MentionSuggestion> {
 	}
 
 	private async createSuggestionFile(value: MentionSuggestion) : Promise<void> {
+		const dir = path.dirname(value.mentionLink.path);
+
+		this.app.vault.createFolder(dir);
+
 		const contents = await this.loadMentionTypeTemplate(value.mentionLink.mentionType);
 		await this.app.vault.create(value.mentionLink.path, contents);
 	}
