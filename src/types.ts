@@ -22,7 +22,11 @@ export interface MentionSignSettings {
 	templatePath?: string;
 }
 
-export type LinkType = 'alias' | 'filename';
+export enum LinkTypes {
+	alias,
+	filename,
+	all = alias | filename
+}
 
 export interface SignToNameKeys {
 	[sign: string]: string[];
@@ -45,13 +49,13 @@ export interface Link {
 	path: string;
 	name: string;
 	fileName: string;
-	type: LinkType;
+	type: LinkTypes;
 }
 
 export interface LinkDetail {
 	name: string;
 	fileName: string;
-	type: LinkType;
+	type: LinkTypes;
 }
 
 /**
@@ -67,6 +71,7 @@ export interface AvailableSigns {
 export interface MentionSuggestion {
 	suggestionType: 'set' | 'create';
 	displayText: string;
-	mentionLink: LinkDetail;
+	link: Link;
+	mentionType: MentionSignSettings;
 	context: EditorSuggestContext;
 }

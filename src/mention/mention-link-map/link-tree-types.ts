@@ -1,4 +1,4 @@
-import { LinkType } from "src/types";
+import { LinkTypes } from "src/types";
 
 export interface LinkTreeNode {
 	key: string;
@@ -10,14 +10,14 @@ export interface LinkTreeNode {
 		[path: string]: {
 			fileName: string;
 			links: {
-				type: LinkType;
+				type: LinkTypes;
 				name: string;
 			}[];
 		};
 	};
 }
 
-export interface LinkSignTree {
+export class LinkTreeRoot {
 	[sign: string]: LinkTreeNode;
 }
 

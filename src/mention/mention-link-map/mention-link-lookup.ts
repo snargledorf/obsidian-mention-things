@@ -1,47 +1,14 @@
-import { PathToLinkDetail, SignToPathToLinkDetails } from "src/types";
-import { LinkSignTree } from "./types";
+import { Link } from "src/types";
+import { MentionLinkMap } from "./mention-link-map";
 
-export class MentionLinkLookup {	
-	constructor(linkSignTree: LinkSignTree) {
-		this.linkSignTree = linkSignTree;
+export class MentionLinkLookup {
+	private map: MentionLinkMap;
+
+	constructor(map: MentionLinkMap) {
+		this.map = map;
 	}
-
-	public getMentionNamesBySign(sign: string): string[] {
-		return this.mentionSignToNames[sign] || [];
-	}
-
-	public getMentionSignToLinksByName(name: string): SignToPathToLinkDetails {
-		return this.mentionNamesToLinks[name] || {};
-	}
-
-	public getMentionLinksBySignAndName(sign: string, name: string): PathToLinkDetail {
-		if (!this.mentionNamesToLinks[name] || !this.mentionNamesToLinks[name][sign]) {
-			return {};
-		}
-
-		return this.mentionNamesToLinks[name][sign];
-	}
-
-	public getMentionLinsBySign(sign: string): PathToLinkDetail[] {
-		const names = this.mentionSignToNames[sign];
-		if (!names) {
-			return [];
-		}
-
-		const signLinks: PathToLinkDetail[] = [];
-
-		for (const name in names) {
-			const signToLinksForName = this.mentionNamesToLinks[name];
-			if (!signToLinksForName) {
-				continue;
-			}
-
-			const signLinksForName = signToLinksForName[sign];
-			if (signToLinksForName) {
-				signLinks.push(signLinksForName);
-			}
-		}
-
-		return signLinks;
+	
+	public getLinks(sign: string, name: string): Link[] {
+		return this.map.getLinks(sign, name);
 	}
 }

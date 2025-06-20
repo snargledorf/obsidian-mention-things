@@ -1,6 +1,5 @@
 import { App, TFile } from 'obsidian';
-import { MentionSettings } from '../types';
-import { getLinkFromPath, getLinkFromAlias } from './link-utils';
+import { LinkTypes, MentionSettings } from '../types';
 import { MentionLinkMap as MentionLinkMap } from './mention-link-map/mention-link-map';
 import { MentionLinkLookup as MentionLinkLookup } from './mention-link-map/mention-link-lookup';
 
@@ -34,10 +33,10 @@ export class FileIndexer {
 
 		// Process each file
 		for (const fileWithAliases of filesWithAliases) {
-			this.mentionMap.addFilenameByPath(fileWithAliases.file.path);
+			this.mentionMap.addFilenameLink(fileWithAliases.file.path);
 			
 			for (const alias of fileWithAliases.aliases) {
-				this.mentionMap.addAlias(alias, fileWithAliases.file.path);
+				this.mentionMap.addAliasLink(alias, fileWithAliases.file.path);
 			}
 		}
 
@@ -48,43 +47,35 @@ export class FileIndexer {
 	 * Get the current file maps
 	 */
 	getLookup(): MentionLinkLookup {
-		return this.mentionMap.buildLookup();
+		return this.mentionMap.getLookup();
 	}
 
-	fileCreated(file: TFile) {
+	fileCreated(file: TFile): boolean {
 		return this.fileModified(file);
 	}
 
 	fileDeleted(file: TFile): boolean {
-		return this.mentionMap.removeAllLinksForPath(file.path);
+		return this.mentionMap.removeLinks(file.path);
 	}
 
 	/**
 	 * Update the file index when a file is renamed
 	 */
 	fileRenamed(file: TFile, originalPath: string): boolean {
-		
+		return this.mentionMap.updatePath(originalPath, file.path);
 	}
 
 	fileModified(file: TFile) {
-		let needsUpdate = false;
+		let needsUpdate = this.mentionMap.addFilenameLink(file.path);
 
-		// Handle new or updated file
-		const addItem = getLinkFromPath(file.path, this.settings);
-		if (addItem) {
-			this.addLinkToMap(addItem);
-			needsUpdate = true;
-		}
+		const fileAliases = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases as string[];
 
-		const fileAliases: string[] = this.app.metadataCache.getFileCache(file)?.frontmatter?.aliases;
 		if (fileAliases) {
-			fileAliases.forEach(alias => {
-				const aliasLink = getLinkFromAlias(alias, file, this.settings);
-				if (aliasLink) {
-					this.addLinkToMap(aliasLink);
-					needsUpdate = true;
-				}
-			});
+			for (const alias of fileAliases) {
+				needsUpdate = this.mentionMap.addAliasLink(alias, file.path) || needsUpdate;
+			}
+		} else {
+			needsUpdate = this.mentionMap.removeLinks(file.path, LinkTypes.alias) || needsUpdate;
 		}
 
 		return needsUpdate;

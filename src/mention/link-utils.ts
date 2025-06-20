@@ -1,8 +1,8 @@
 import { TFile } from 'obsidian';
-import { MentionSettings, Link } from '../types';
+import { MentionSettings, Link, LinkTypes } from '../types';
 import { ALLOWED_SIGNS } from 'src/constants';
 
-const filePathRegex = new RegExp(`/(?<fileName>(?<sign>[${ALLOWED_SIGNS.join('\\')}])(?<name>[^/]+))\\.md$`);
+const filePathRegex = new RegExp(`/?(?<fileName>(?<sign>[${ALLOWED_SIGNS.join('\\')}])(?<name>[^/]+))\\.md$`);
 const aliasRegex = new RegExp(`(?<sign>[${ALLOWED_SIGNS.join('\\')}])(?<name>[^/]+)$`);
 
 /**
@@ -18,7 +18,7 @@ export function getLinkFromPath(path: string, settings?: MentionSettings): Link 
 		return null;
 	}
 
-	return { path, type: 'filename', ...linkParts };
+	return { path, type: LinkTypes.filename, ...linkParts };
 }
 
 export function parseLinkPartsFromPath(path: string) : { sign: string, name: string, fileName: string } | null {
@@ -68,7 +68,7 @@ export function getLinkFromAlias(alias: string, file: TFile, settings: MentionSe
 		path,
 		name,
 		fileName,
-		type: 'alias'
+		type: LinkTypes.alias
 	}
 }
 
@@ -95,7 +95,7 @@ export function parseLinkPartsFromAlias(alias: string): { sign: string, name: st
  */
 export function createMentionLink(mentionLink: Link): string {
 	let linkText = mentionLink.fileName;
-	if (mentionLink.type === 'alias') {
+	if (mentionLink.type === LinkTypes.alias) {
 		linkText = `${linkText}|${mentionLink.sign}${mentionLink.name}`;
 	}
 
