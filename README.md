@@ -13,7 +13,7 @@ The author was [[@Rich Hickey]]
 and leave the cursor at the end.
 
 **Credits:**
-This plugin is based on [saibotsivad/obsidian-at-people](https://github.com/saibotsivad/obsidian-at-people) by Tobias Davis
+This plugin is based on [stracker-phil/obsidian-mention-things](https://github.com/stracker-phil/obsidian-mention-things) which in turn is based on [saibotsivad/obsidian-at-people](https://github.com/saibotsivad/obsidian-at-people) by Tobias Davis
 
 ## Options
 
