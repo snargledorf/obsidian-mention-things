@@ -101,7 +101,7 @@ export default class MentionThingsPlugin extends Plugin {
 	 * Refresh the suggestions list in the editor
 	 */
 	private refreshSuggestions(): void {
-		const fileMaps = this.mentionManager.getFileMaps();
+		const fileMaps = this.mentionManager.getLookup();
 		this.suggestionProvider.setSuggestionsMap(fileMaps);
 	}
 

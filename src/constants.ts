@@ -13,5 +13,6 @@ export const DEFAULT_SETTINGS: MentionSettings = {
 /**
  * List of allowed signs for mentions
  */
+
 export const ALLOWED_SIGNS_STRING = '@#+!$%^&*~=-:;><|';
 export const ALLOWED_SIGNS = ALLOWED_SIGNS_STRING.split('');
